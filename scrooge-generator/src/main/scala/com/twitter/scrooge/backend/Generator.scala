@@ -29,6 +29,7 @@ import scala.collection.mutable
 abstract sealed class ServiceOption
 
 case object WithFinagle extends ServiceOption
+case object WithFinagleJava8 extends ServiceOption
 case class JavaService(service: Service, options: Set[ServiceOption])
 
 abstract class Generator(doc: ResolvedDocument) {
@@ -386,12 +387,28 @@ abstract class TemplateGenerator(val resolvedDoc: ResolvedDocument)
   ): Option[File] =
     None
 
+  def finagleClientJava8File(
+    packageDir: File,
+    service: Service, options:
+    Set[ServiceOption]
+  ): Option[File] =
+    None
+
+
   def finagleServiceFile(
     packageDir: File,
     service: Service, options:
     Set[ServiceOption]
   ): Option[File] =
     None
+
+  def finagleServiceJava8File(
+    packageDir: File,
+    service: Service, options:
+    Set[ServiceOption]
+  ): Option[File] =
+    None
+
 
 
   def templates: HandlebarLoader
@@ -450,7 +467,9 @@ abstract class TemplateGenerator(val resolvedDoc: ResolvedDocument)
       service =>
         val interfaceFile = new File(packageDir, service.sid.toTitleCase.name + fileExtension)
         val finagleClientFileOpt = finagleClientFile(packageDir, service, serviceOptions)
+        val finagleClientJava8FileOpt = finagleClientJava8File(packageDir, service, serviceOptions)
         val finagleServiceFileOpt = finagleServiceFile(packageDir, service, serviceOptions)
+        val finagleServiceJava8FileOpt = finagleServiceJava8File(packageDir, service, serviceOptions)
 
         if (!dryRun) {
           val dict = serviceDict(service, namespace, includes, serviceOptions)
@@ -461,14 +480,26 @@ abstract class TemplateGenerator(val resolvedDoc: ResolvedDocument)
             writeFile(file, templates.header, templates("finagleClient").generate(dict))
           }
 
+          finagleClientJava8FileOpt foreach { file =>
+            val dict = finagleClientJava8(service, namespace)
+            writeFile(file, templates.header, templates("finagleClientJava8").generate(dict))
+          }
+
           finagleServiceFileOpt foreach { file =>
             val dict = finagleService(service, namespace)
             writeFile(file, templates.header, templates("finagleService").generate(dict))
           }
+
+          finagleServiceJava8FileOpt foreach { file =>
+            val dict = finagleServiceJava8(service, namespace)
+            writeFile(file, templates.header, templates("finagleServiceJava8").generate(dict))
+          }
         }
         generatedFiles += interfaceFile
         generatedFiles ++= finagleServiceFileOpt
-        generatedFiles ++= finagleClientFileOpt
+        generatedFiles ++= finagleServiceJava8FileOpt
+	generatedFiles ++= finagleClientFileOpt
+        generatedFiles ++= finagleClientJava8FileOpt
     }
 
     generatedFiles

@@ -31,6 +31,9 @@ import org.apache.thrift.transport.TMemoryBuffer;
 import org.apache.thrift.transport.TMemoryInputTransport;
 import org.apache.thrift.transport.TTransport;
 {{/withFinagle}}
+{{#withFinagleJava8}}
+import java.util.concurrent.CompletableFuture;
+{{/withFinagleJava8}}
 
 {{docstring}}
 @javax.annotation.Generated(value = "com.twitter.scrooge.Compiler")
@@ -70,6 +73,36 @@ public class {{ServiceName}} {
 
 {{/withFinagle}}
 
+{{#withFinagleJava8}}
+  public static interface FutureIface {{#futureIfaceParent}}extends {{futureIfaceParent}} {{/futureIfaceParent}}{
+{{#asyncJava8Functions}}
+    {{>function}};
+{{/asyncJava8Functions}}
+  }
+
+  public static class FinagledClient extends {{ServiceName}}$FinagleClient {
+    public FinagledClient (
+      com.twitter.finagle.Service<com.twitter.finagle.thrift.ThriftClientRequest, byte[]> service,
+      TProtocolFactory protocolFactory,
+      String serviceName,
+      com.twitter.finagle.stats.StatsReceiver stats
+      ) {
+        super(service, protocolFactory, serviceName, stats);
+      }
+  }
+
+  public static class FinagledService extends {{ServiceName}}$FinagleService {
+    public FinagledService (
+      FutureIface iface,
+      TProtocolFactory protocolFactory
+      ) {
+        super(iface, protocolFactory);
+    }
+  }
+
+{{/withFinagleJava8}}
+
+
 {{#thriftFunctions}}
   public static class {{funcObjectName}} {
 {{#functionArgsStruct}}
@@ -86,7 +119,13 @@ public class {{ServiceName}} {
 {{#finagleClients}}
   {{>finagleClient}}
 {{/finagleClients}}
+{{#finagleClientsJava8}}
+  {{>finagleClientJava8}}
+{{/finagleClientsJava8}}
 {{#finagleServices}}
   {{>finagleService}}
 {{/finagleServices}}
+{{#finagleServicesJava8}}
+  {{>finagleServiceJava8}}
+{{/finagleServicesJava8}}
 }

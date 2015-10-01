@@ -16,7 +16,7 @@
 
 package com.twitter.scrooge
 
-import com.twitter.scrooge.backend.{GeneratorFactory, WithFinagle}
+import com.twitter.scrooge.backend.{GeneratorFactory, WithFinagle, WithFinagleJava8}
 import java.io.File
 import java.util.Properties
 import scopt.OptionParser
@@ -130,6 +130,12 @@ object Main {
         c.flags += WithFinagle
         c
       } text("generate finagle classes")
+
+      opt[Unit]("finagle-java8") action { (_, c) =>
+        c.flags += WithFinagleJava8
+        c
+      } text("generate java 8 finagle classes")
+
 
       arg[String]("<files...>") unbounded() action { (files, c) =>
         c.thriftFiles += files
