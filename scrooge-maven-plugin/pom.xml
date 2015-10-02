@@ -139,7 +139,7 @@
           </execution>
         </executions>
         <configuration>
-          <scalaVersion>2.10.4</scalaVersion>
+          <scalaVersion>2.11.7</scalaVersion>
         </configuration>
       </plugin>
       <plugin>
@@ -241,7 +241,7 @@
     </dependency>
     <dependency>
       <groupId>com.twitter</groupId>
-      <artifactId>scrooge-generator_2.10</artifactId>
+      <artifactId>scrooge-generator_2.11</artifactId>
       <version>4.1.0</version>
     </dependency>
     <!-- Test Dependencies-->
