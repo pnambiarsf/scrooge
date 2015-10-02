@@ -109,6 +109,13 @@ trait ServiceTemplate { self: TemplateGenerator =>
   def finagleClient(
     service: Service,
     namespace: Identifier
+  ) = finagleClientCommon(service,namespace,"Future","finagleClientFunction")
+
+  def finagleClientCommon(
+    service: Service,
+    namespace: Identifier,
+    generic: String,
+    fnTemplate: String
   ) =
     Dictionary(
       "package" -> genID(namespace),
@@ -124,7 +131,7 @@ trait ServiceTemplate { self: TemplateGenerator =>
         f =>
           Dictionary(
             "function" -> v(templates("function")),
-            "functionInfo" -> v(functionDictionary(f, Some("Future"))),
+            "functionInfo" -> v(functionDictionary(f, Some(generic))),
             "clientFuncNameForWire" -> v(f.originalName),
             "__stats_name" -> genID(f.funcName.toCamelCase.prepend("__stats_")),
             "type" -> genType(f.funcType),
@@ -135,44 +142,23 @@ trait ServiceTemplate { self: TemplateGenerator =>
             }
           )
       }),
-      "finagleClientFunction" -> v(templates("finagleClientFunction"))
+      "finagleClientFunction" -> v(templates(fnTemplate))
     )
 
   def finagleClientJava8(
     service: Service,
     namespace: Identifier
-  ) =
-    Dictionary(
-      "package" -> genID(namespace),
-      "ServiceName" -> genID(service.sid.toTitleCase),
-      "docstring" -> v(service.docstring.getOrElse("")),
-      "hasParent" -> v(service.parent.isDefined),
-      "parent" -> v(service.parent.map { p =>
-        genID(getServiceParentID(p))
-      }),
-      "finagleClientParent" ->
-        service.parent.map(getParentFinagleClient).getOrElse(v("")),
-      "functions" -> v(service.functions.map {
-        f =>
-          Dictionary(
-            "function" -> v(templates("function")),
-            "functionInfo" -> v(functionDictionary(f, Some("CompletableFuture"))),
-            "clientFuncNameForWire" -> v(f.originalName),
-            "__stats_name" -> genID(f.funcName.toCamelCase.prepend("__stats_")),
-            "type" -> genType(f.funcType),
-            "isVoid" -> v(f.funcType == Void || f.funcType == OnewayVoid),
-            "argNames" -> {
-              val code = f.args.map { field => genID(field.sid).toData }.mkString(", ")
-              v(code)
-            }
-          )
-      }),
-      "finagleClientFunction" -> v(templates("finagleClientJava8Function"))
-    )
+  ) = finagleClientCommon(service,namespace,"CompletableFuture","finagleClientJava8Function")
 
   def finagleService(
     service: Service,
     namespace: Identifier
+  ) = finagleServiceCommon(service,identifier,"finagleServiceFunction")
+
+  def finagleServiceCommon(
+    service: Service,
+    namespace: Identifier,
+    fnTemplate: String 
   ) =
     Dictionary(
       "package" -> genID(namespace),
@@ -181,7 +167,7 @@ trait ServiceTemplate { self: TemplateGenerator =>
       "hasParent" -> v(service.parent.isDefined),
       "finagleServiceParent" ->
         service.parent.map(getParentFinagleService).getOrElse(genBaseFinagleService),
-      "function" -> v(templates("finagleServiceFunction")),
+      "function" -> v(templates(fnTemplate)),
       "functions" -> v(service.functions map {
         f =>
           Dictionary(
@@ -210,39 +196,7 @@ trait ServiceTemplate { self: TemplateGenerator =>
   def finagleServiceJava8(
     service: Service,
     namespace: Identifier
-  ) =
-    Dictionary(
-      "package" -> genID(namespace),
-      "ServiceName" -> genID(service.sid.toTitleCase),
-      "docstring" -> v(service.docstring.getOrElse("")),
-      "hasParent" -> v(service.parent.isDefined),
-      "finagleServiceParent" ->
-        service.parent.map(getParentFinagleService).getOrElse(genBaseFinagleService),
-      "function" -> v(templates("finagleServiceJava8Function")),
-      "functions" -> v(service.functions map {
-        f =>
-          Dictionary(
-            "serviceFuncNameForCompile" -> genID(f.funcName.toCamelCase),
-            "serviceFuncNameForWire" -> v(f.originalName),
-            "funcObjectName" -> genID(functionObjectName(f)),
-            "argNames" ->
-              v(f.args.map { field =>
-                "args." + genID(field.sid).toData
-              }.mkString(", ")),
-            "typeName" -> genType(f.funcType),
-            "isVoid" -> v(f.funcType == Void || f.funcType == OnewayVoid),
-            "resultNamedArg" ->
-              v(if (f.funcType != Void && f.funcType != OnewayVoid) "success = Some(value)" else ""),
-            "exceptions" -> v(f.throws map {
-              t =>
-                Dictionary(
-                  "exceptionType" -> genType(t.fieldType),
-                  "fieldName" -> genID(t.sid)
-                )
-            })
-          )
-      })
-    )
+  ) = finagleServiceCommon(service,identifier,"finagleServiceJava8Function")
 
   def unwrapArgs(arity: Int): String =
     arity match {
