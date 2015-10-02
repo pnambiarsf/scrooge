@@ -153,7 +153,7 @@ trait ServiceTemplate { self: TemplateGenerator =>
   def finagleService(
     service: Service,
     namespace: Identifier
-  ) = finagleServiceCommon(service,identifier,"finagleServiceFunction")
+  ) = finagleServiceCommon(service,namespace,"finagleServiceFunction")
 
   def finagleServiceCommon(
     service: Service,
@@ -196,7 +196,7 @@ trait ServiceTemplate { self: TemplateGenerator =>
   def finagleServiceJava8(
     service: Service,
     namespace: Identifier
-  ) = finagleServiceCommon(service,identifier,"finagleServiceJava8Function")
+  ) = finagleServiceCommon(service,namespace,"finagleServiceJava8Function")
 
   def unwrapArgs(arity: Int): String =
     arity match {
