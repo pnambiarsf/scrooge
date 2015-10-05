@@ -8,7 +8,7 @@ import com.twitter.finagle.stats.StatsReceiver;
 import com.twitter.finagle.thrift.ThriftClientRequest;
 import com.twitter.util.Function2;
 import com.twitter.util.Future;
-import com.twitter.util.FutureEventListener;
+//import com.twitter.util.FutureEventListener;
 import com.twitter.util.Promise;
 import com.twitter.scrooge.Option;
 import com.twitter.scrooge.ThriftStruct;
@@ -23,18 +23,19 @@ import org.apache.thrift.transport.TMemoryBuffer;
 import org.apache.thrift.transport.TMemoryInputTransport;
 import org.apache.thrift.transport.TTransport;
 
+import com.twitter.util.Awaitable;
+import com.twitter.util.Duration;
+import com.twitter.util.TimeoutException;
+import com.twitter.util.Try;
+
+import scala.Function1;
+import scala.runtime.BoxedUnit;
+
 import java.util.function.Function;
-import java.util.function.BiFunction;
 import java.util.concurrent.CompletableFuture;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import {{package}}.{{ServiceName}}.*;
 
@@ -85,7 +86,7 @@ public class {{ServiceName}}$FinagleService extends {{finagleServiceParent}} {
     }
   }
 
-  /*protected CompletableFuture<byte[]> reply(String name, int seqid, ThriftStruct result) {
+  protected CompletableFuture<byte[]> reply(String name, int seqid, ThriftStruct result) {
     try {
       TMemoryBuffer memoryBuffer = new TMemoryBuffer(512);
       TProtocol oprot = protocolFactory.getProtocol(memoryBuffer);
@@ -99,21 +100,6 @@ public class {{ServiceName}}$FinagleService extends {{finagleServiceParent}} {
       CompletableFuture<byte[]> future = new CompletableFuture<byte[]>();
       future.completeExceptionally(e);
       return future;
-    }
-  }*/
-
-  protected Future<byte[]> reply(String name, int seqid, ThriftStruct result) {
-    try {
-      TMemoryBuffer memoryBuffer = new TMemoryBuffer(512);
-      TProtocol oprot = protocolFactory.getProtocol(memoryBuffer);
-
-      oprot.writeMessageBegin(new TMessage(name, TMessageType.REPLY, seqid));
-      result.write(oprot);
-      oprot.writeMessageEnd();
-
-      return Future.value(Arrays.copyOfRange(memoryBuffer.getArray(), 0, memoryBuffer.length()));
-    } catch (Exception e) {
-      return Future.exception(e);
     }
   }
 
@@ -138,22 +124,57 @@ public class {{ServiceName}}$FinagleService extends {{finagleServiceParent}} {
   // ---- end boilerplate.
 {{/hasServer}}
 
-/*
-static class CFTF<T> extends Promise<T> {
+public class CFTF<T> extends com.twitter.util.Future<T> {
+        private Promise<T> promise = new Promise<>();
 
-        CFTF(CompletableFuture<T> f) {
-
-        /*f.whenComplete((ok, ex) -> {
-                if(ok != null) {
-                        setValue(ok);
-                } else {
-                        setException(ex);
-
-                }
-
-        });
+        public CFTF(CompletableFuture<T> javaFuture) {
+                javaFuture.whenComplete((ok, ex) -> {
+                        if(ok != null) {
+                                promise.setValue(ok);
+                        } else {
+                                promise.setException(ex);
+                        }
+                });
         }
+        @Override
+        public boolean isReady(com.twitter.util.Awaitable.CanAwait arg0) {
+                return promise.isReady(arg0);
+        }
+
+        @Override
+        public Awaitable<T> ready(Duration arg0,
+                        com.twitter.util.Awaitable.CanAwait arg1) throws TimeoutException,
+                        InterruptedException {
+                return promise.ready(arg0, arg1);
+        }
+
+        @Override
+        public T result(Duration arg0, com.twitter.util.Awaitable.CanAwait arg1)
+                        throws Exception {
+                return promise.result(arg0, arg1);
+        }
+
+        @Override
+        public scala.Option<Try<T>> poll() {
+                return promise.poll();
+        }
+
+        @Override
+        public void raise(Throwable arg0) {
+                promise.raise(arg0);
+        }
+
+        @Override
+        public Future<T> respond(Function1<Try<T>, BoxedUnit> arg0) {
+                return promise.respond(arg0);
+        }
+
+        @Override
+        public <B> Future<B> transform(Function1<Try<T>, Future<B>> arg0) {
+                return promise.transform(arg0);
+        }
+
+
 }
-*/
 
 }
