@@ -241,12 +241,30 @@ class JavaGenerator(
       new File(packageDir, service.sid.toTitleCase.name + "$FinagleClient" + fileExtension)
     }
 
+  override def finagleClientJava8File(
+    packageDir: File,
+    service: Service, options:
+    Set[ServiceOption]
+  ): Option[File] =
+    options.find(_ == WithFinagleJava8) map { _ =>
+      new File(packageDir, service.sid.toTitleCase.name + "$FinagleClient" + fileExtension)
+    }
+
   override def finagleServiceFile(
      packageDir: File,
      service: Service, options:
     Set[ServiceOption]
   ): Option[File] =
     options.find(_ == WithFinagle) map { _ =>
+      new File(packageDir, service.sid.toTitleCase.name + "$FinagleService" + fileExtension)
+    }
+
+  override def finagleServiceJava8File(
+     packageDir: File,
+     service: Service, options:
+    Set[ServiceOption]
+  ): Option[File] =
+    options.find(_ == WithFinagleJava8) map { _ =>
       new File(packageDir, service.sid.toTitleCase.name + "$FinagleService" + fileExtension)
     }
 }

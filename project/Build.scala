@@ -13,7 +13,7 @@ import scoverage.ScoverageSbtPlugin
 
 object Scrooge extends Build {
   val branch = Process("git" :: "rev-parse" :: "--abbrev-ref" :: "HEAD" :: Nil).!!.trim
-  val suffix = if (branch == "master") "" else "-SNAPSHOT"
+  val suffix = ""
 
   val libVersion = "4.1.0" + suffix
 
@@ -190,8 +190,13 @@ object Scrooge extends Build {
       finagle("core") exclude("org.mockito", "mockito-all"),
       finagle("thrift") % "test"
     ),
+    artifact in (Compile, packageBin) := {
+      val previous: Artifact = (artifact in (Compile, packageBin)).value
+      previous.copy(`classifier` = Some("sfdc"))
+    },
     test in assembly := {},  // Skip tests when running assembly.
     mainClass in assembly := Some("com.twitter.scrooge.Main")
+
   ).dependsOn(scroogeRuntime % "test")
 
   lazy val scroogeCore = Project(

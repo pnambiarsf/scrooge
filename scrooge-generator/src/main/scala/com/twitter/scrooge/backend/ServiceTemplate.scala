@@ -109,6 +109,13 @@ trait ServiceTemplate { self: TemplateGenerator =>
   def finagleClient(
     service: Service,
     namespace: Identifier
+  ) = finagleClientCommon(service,namespace,"Future","finagleClientFunction")
+
+  def finagleClientCommon(
+    service: Service,
+    namespace: Identifier,
+    generic: String,
+    fnTemplate: String
   ) =
     Dictionary(
       "package" -> genID(namespace),
@@ -124,7 +131,7 @@ trait ServiceTemplate { self: TemplateGenerator =>
         f =>
           Dictionary(
             "function" -> v(templates("function")),
-            "functionInfo" -> v(functionDictionary(f, Some("Future"))),
+            "functionInfo" -> v(functionDictionary(f, Some(generic))),
             "clientFuncNameForWire" -> v(f.originalName),
             "__stats_name" -> genID(f.funcName.toCamelCase.prepend("__stats_")),
             "type" -> genType(f.funcType),
@@ -135,12 +142,23 @@ trait ServiceTemplate { self: TemplateGenerator =>
             }
           )
       }),
-      "finagleClientFunction" -> v(templates("finagleClientFunction"))
+      "finagleClientFunction" -> v(templates(fnTemplate))
     )
+
+  def finagleClientJava8(
+    service: Service,
+    namespace: Identifier
+  ) = finagleClientCommon(service,namespace,"CompletableFuture","finagleClientJava8Function")
 
   def finagleService(
     service: Service,
     namespace: Identifier
+  ) = finagleServiceCommon(service,namespace,"finagleServiceFunction")
+
+  def finagleServiceCommon(
+    service: Service,
+    namespace: Identifier,
+    fnTemplate: String 
   ) =
     Dictionary(
       "package" -> genID(namespace),
@@ -149,7 +167,7 @@ trait ServiceTemplate { self: TemplateGenerator =>
       "hasParent" -> v(service.parent.isDefined),
       "finagleServiceParent" ->
         service.parent.map(getParentFinagleService).getOrElse(genBaseFinagleService),
-      "function" -> v(templates("finagleServiceFunction")),
+      "function" -> v(templates(fnTemplate)),
       "functions" -> v(service.functions map {
         f =>
           Dictionary(
@@ -175,6 +193,11 @@ trait ServiceTemplate { self: TemplateGenerator =>
       })
     )
 
+  def finagleServiceJava8(
+    service: Service,
+    namespace: Identifier
+  ) = finagleServiceCommon(service,namespace,"finagleServiceJava8Function")
+
   def unwrapArgs(arity: Int): String =
     arity match {
       case 0 => ""
@@ -192,6 +215,7 @@ trait ServiceTemplate { self: TemplateGenerator =>
     options: Set[ServiceOption]
   ) = {
     val withFinagle = options.contains(WithFinagle)
+    val withFinagleJava8 = options.contains(WithFinagleJava8)
     Dictionary(
       "function" -> v(templates("function")),
       "package" -> genID(namespace),
@@ -214,6 +238,9 @@ trait ServiceTemplate { self: TemplateGenerator =>
       }),
       "asyncFunctions" -> v(service.functions.map {
         f => functionDictionary(f, Some("Future"))
+      }),
+      "asyncJava8Functions" -> v(service.functions.map {
+        f => functionDictionary(f, Some("CompletableFuture"))
       }),
       "genericFunctions" -> v(service.functions.map {
         f => functionDictionary(f, Some("MM"))
@@ -246,10 +273,16 @@ trait ServiceTemplate { self: TemplateGenerator =>
         ) + functionDictionary(f, Some("Future"))
       }),
       "finagleClients" -> v(
-        if (withFinagle) Seq(finagleClient(service, namespace)) else Seq()
+        if (withFinagle) Seq(finagleClient(service, namespace)) else if (withFinagleJava8) Seq(finagleClientJava8(service,namespace)) else Seq()
+      ),
+      "finagleClientsJava8" -> v(
+        if (withFinagleJava8) Seq(finagleClientJava8(service,namespace)) else Seq()
       ),
       "finagleServices" -> v(
         if (withFinagle) Seq(finagleService(service, namespace)) else Seq()
+      ),
+      "finagleServicesJava8" -> v(
+        if (withFinagleJava8) Seq(finagleServiceJava8(service, namespace)) else Seq()
       ),
       // This is needed for Scala 2.10 only.
       // TODO remove this when 2.10 is no longer supported.
@@ -272,6 +305,7 @@ trait ServiceTemplate { self: TemplateGenerator =>
         v(totalFunctions <= 254)
       },
       "withFinagle" -> v(withFinagle),
+      "withFinagleJava8" -> v(withFinagleJava8),
 
       "inheritedFunctions" -> {
         // For service-per-endpoint, we generate a class with a value for each method, so

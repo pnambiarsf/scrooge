@@ -21,6 +21,9 @@ import org.apache.thrift.transport.TMemoryBuffer;
 import org.apache.thrift.transport.TMemoryInputTransport;
 import org.apache.thrift.transport.TTransport;
 
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -124,5 +127,39 @@ public class {{ServiceName}}$FinagleClient{{#hasParent}} extends {{finagleClient
   {{>finagleClientFunction}}
 {{/functionInfo}}
 {{/functions}}
+
+
+static class TFCF<T> extends CompletableFuture<T> {
+        private Future<T> tFuture;
+    private AtomicBoolean wasCancelled = new AtomicBoolean(false);
+
+        public TFCF(Future<T> tFuture) {
+                FutureEventListener<T> listener = new FutureEventListener<T>() {
+                        @Override
+                        public void onFailure(Throwable t) {
+                                completeExceptionally(t);
+                        }
+                        @Override
+                        public void onSuccess(T result) {
+                                complete(result);
+                        }
+                };
+                tFuture.addEventListener(listener);
+                this.tFuture = tFuture;
+        }
+
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+                if(wasCancelled.compareAndSet(false, true)) {
+                        tFuture.raise(new CancellationException());
+                }
+                return super.cancel(mayInterruptIfRunning);
+        }
+
+        public static <T>  CompletableFuture<T> wrap(Future<T> tFuture) {
+                return new TFCF<T>(tFuture);
+        }
+
 }
 
+}
