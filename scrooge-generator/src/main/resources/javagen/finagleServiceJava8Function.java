@@ -10,18 +10,11 @@ addFunction("{{serviceFuncNameForWire}}", new Function2<TProtocol, Integer, Futu
 	result = new CompletableFuture<{{typeName}}>();
         result.completeExceptionally(t);
       }
-      return new CFTF(result.thenCompose(new Function<{{typeName}},CompletableFuture<byte[]>>() {
+      return new CFTF<byte[]>(result.thenCompose(new Function<{{typeName}},CompletableFuture<byte[]>>() {
 		public CompletableFuture<byte[]> apply({{typeName}} value) {
 		      return reply("{{serviceFuncNameForWire}}", seqid, new {{funcObjectName}}.Result.Builder(){{^isVoid}}.success(value){{/isVoid}}.build());
 		}
-		}))
-		.exceptionally(new Function<Throwable,CompletableFuture<byte[]>>() {
-                	public CompletableFuture<byte[]> apply(Throwable t) {
-      			CompletableFuture<byte[]> future = new CompletableFuture<byte[]>();
-      			future.completeExceptionally(t);
-      			return future;
-                }}))
-		;
+		}));
     } catch (TProtocolException e) {
       try {
         iprot.readMessageEnd();
