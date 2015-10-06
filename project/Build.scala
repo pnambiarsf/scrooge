@@ -10,12 +10,15 @@ import sbtassembly.Plugin._
 import AssemblyKeys._
 import sbtbuildinfo.Plugin._
 import scoverage.ScoverageSbtPlugin
+import java.util.Properties
+
 
 object Scrooge extends Build {
   val branch = Process("git" :: "rev-parse" :: "--abbrev-ref" :: "HEAD" :: Nil).!!.trim
   val suffix = ""
 
   val libVersion = "4.1.0" + suffix
+
 
   // To build the develop branch you need to publish util, ostrich and finagle locally:
   // 'git checkout develop; sbt publishLocal' to publish SNAPSHOT versions of these projects.
@@ -125,13 +128,13 @@ object Scrooge extends Build {
         </developer>
       </developers>),
     publishTo <<= version { (v: String) =>
-      val nexus = "https://oss.sonatype.org/"
+      val nexus = "https://nexus.soma.salesforce.com/nexus/content/repositories/"
       if (v.trim.endsWith("SNAPSHOT"))
-        Some("snapshots" at nexus + "content/repositories/snapshots")
+        Some("snapshots" at nexus + "thirdparty-snapshots")
       else
-        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+        Some("releases"  at nexus + "thirdparty")
     },
-
+    credentials += Credentials("Sonatype Nexus Repository Manager", "nexus.soma.salesforce.com", "team-pfoperational", "platf0rm"),
     resourceGenerators in Compile <+=
       (resourceManaged in Compile, name, version) map { (dir, name, ver) =>
         val file = dir / "com" / "twitter" / name / "build.properties"
@@ -196,7 +199,6 @@ object Scrooge extends Build {
     },
     test in assembly := {},  // Skip tests when running assembly.
     mainClass in assembly := Some("com.twitter.scrooge.Main")
-
   ).dependsOn(scroogeRuntime % "test")
 
   lazy val scroogeCore = Project(
