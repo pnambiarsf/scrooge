@@ -134,7 +134,7 @@ object Scrooge extends Build {
       else
         Some("releases"  at nexus + "thirdparty")
     },
-    credentials += Credentials("Sonatype Nexus Repository Manager", "nexus.soma.salesforce.com", "team-pfoperational", "platf0rm"),
+    credentials += Credentials(Path.userHome / "nexus.properties"),
     resourceGenerators in Compile <+=
       (resourceManaged in Compile, name, version) map { (dir, name, ver) =>
         val file = dir / "com" / "twitter" / name / "build.properties"
