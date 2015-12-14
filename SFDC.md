@@ -7,9 +7,9 @@ You will need to [install](http://www.scala-sbt.org/release/tutorial/Installing-
 ### How to publish to local maven repository
 
 `git clone https://github.com/pnambiarsf/scrooge`
-
 `cd scrooge`
-
+`git fetch`
+`git checkout master`
 `sbt ++2.11.7  publish-m2`
 
 ### How to clean and build
