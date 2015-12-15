@@ -8,7 +8,7 @@ import com.twitter.finagle.stats.StatsReceiver;
 import com.twitter.finagle.thrift.ThriftClientRequest;
 import com.twitter.util.Function2;
 import com.twitter.util.Future;
-//import com.twitter.util.FutureEventListener;
+import com.twitter.util.FutureEventListener;
 import com.twitter.util.Promise;
 import com.twitter.scrooge.Option;
 import com.twitter.scrooge.ThriftStruct;
@@ -32,10 +32,17 @@ import scala.Function1;
 import scala.runtime.BoxedUnit;
 
 import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.concurrent.CompletableFuture;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import {{package}}.{{ServiceName}}.*;
 
