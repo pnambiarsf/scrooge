@@ -195,7 +195,7 @@ object Scrooge extends Build {
     ),
     artifact in (Compile, packageBin) := {
       val previous: Artifact = (artifact in (Compile, packageBin)).value
-      previous.copy(`classifier` = Some("sfdc"))
+      previous.copy(`classifier` = Some("sfdc-1.1"))
     },
     test in assembly := {},  // Skip tests when running assembly.
     mainClass in assembly := Some("com.twitter.scrooge.Main")
