@@ -37,7 +37,7 @@ password=<replace_with_nexus_password>
 
 * If above command fails, you will have to upload jar manually:
 
-`sbt ++2.11.7  clean clean-files compile`
+`sbt ++2.11.7  clean clean-files package`
 
 `mvn deploy:deploy-file -DgroupId=com.twitter -DartifactId=scrooge-generator_2.11 -Dversion=4.1.0 -Dclassifier=${CLASSIFIER} -Dpackaging=jar -DrepositoryId=nexus -Durl=https://nexus.soma.salesforce.com/nexus/content/repositories/thirdparty -Dfile=/Users/pnambiar/code/scrooge/scrooge-generator/target/scala-2.11/scrooge-generator_2.11-4.1.0-${CLASSIFIER}.jar -DgeneratePom=false` where ${CLASSIFIER} is replaced by sfdc-1.X that was changed in project/Build.scala.
 
